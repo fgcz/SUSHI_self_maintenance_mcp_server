@@ -1,0 +1,6 @@
+#!/usr/bin/env ruby
+require_relative '../lib/sushi_mcp/server'
+
+# Configure strict loading if needed, but for now we rely on auto-loading in server.rb
+SushiMcp::Server.run
+

@@ -1,1 +1,18 @@
-log/
+# Ruby bundler
+vendor/
+.bundle/
+Gemfile.lock
+
+# Logs (keep structure, ignore runtime logs)
+log/*.log
+
+# Editor/IDE
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
