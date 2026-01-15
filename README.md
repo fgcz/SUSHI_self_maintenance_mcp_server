@@ -6,17 +6,14 @@ A Model Context Protocol (MCP) server for SUSHI framework self-maintenance and d
 
 This MCP server provides AI-assisted development support for the SUSHI bioinformatics framework. It enables AI coding assistants (Cursor, Claude Code, etc.) to interact with the SUSHI codebase through a standardized protocol.
 
-### Current Status: Phase 0 (Proof of Concept)
+### Current Status: Phase 4 Complete
 
-Phase 0 establishes basic connectivity between MCP clients and this server via STDIO transport.
-
-### Goals
-
-- **Phase 0**: Verify MCP client connection via STDIO (current)
-- **Phase 1**: Add `search_repo`, `read_file` tools with safety limits
-- **Phase 2**: Add `list_tree`, `find_files` for structure analysis
-- **Phase 3**: Skills Retrieval using `skills/sushi.md`
-- **Phase 4+**: Architecture support, patch proposals, limited execution
+All core phases are implemented:
+- **Phase 0**: Basic MCP connectivity via STDIO ✓
+- **Phase 1**: `search_repo`, `read_file` with safety limits ✓
+- **Phase 2**: `list_tree`, `find_files`, `list_sushi_apps` for structure analysis ✓
+- **Phase 3**: Skills Retrieval using `skills/sushi.md` ✓
+- **Phase 4**: SUSHI App development support tools ✓
 
 ### Architecture
 
@@ -30,21 +27,33 @@ Phase 0 establishes basic connectivity between MCP clients and this server via S
 │                    SUSHI MCP Server                              │
 │  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────────┐ │
 │  │    Server    │ │   Protocol   │ │     Tool Registry        │ │
-│  │  STDIO Loop  │ │  JSON-RPC    │ │  hello_world (Phase 0)   │ │
-│  │              │ │  Handling    │ │  search_repo (Phase 1)   │ │
-│  └──────────────┘ └──────────────┘ │  read_file   (Phase 1)   │ │
-│                                    └──────────────────────────┘ │
+│  │  STDIO Loop  │ │  JSON-RPC    │ │  12 Tools Available      │ │
+│  │              │ │  Handling    │ │  (see table below)       │ │
+│  └──────────────┘ └──────────────┘ └──────────────────────────┘ │
+│                                                                  │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────────────────┐ │
+│  │    Safety    │ │ Skills Parser│ │      App Parser          │ │
+│  │   Module     │ │  (sushi.md)  │ │  (Ruby App Analysis)     │ │
+│  └──────────────┘ └──────────────┘ └──────────────────────────┘ │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Features (Phase 0)
+## Available Tools
 
-| Feature | Description |
-|---------|-------------|
-| **Protocol** | MCP JSON-RPC 2.0 via STDIO |
-| **Transport** | Standard Input/Output |
-| **Tools** | `hello_world` (connectivity test) |
-| **Environment** | Ruby 3.3.7 (Standard Library only) |
+| Tool | Category | Description |
+|------|----------|-------------|
+| `hello_world` | Test | Returns a greeting message (connectivity test) |
+| `search_repo` | Dev Support | Search for text patterns using grep/ripgrep |
+| `read_file` | Dev Support | Read file contents with safety limits |
+| `list_tree` | Structure | Display directory structure as tree |
+| `find_files` | Structure | Find files matching glob patterns |
+| `list_sushi_apps` | Structure | List all SUSHI Apps with categories |
+| `skills_list` | Skills | List available documentation sections |
+| `skills_get` | Skills | Get content of a specific section by ID |
+| `skills_search` | Skills | Search documentation by keyword |
+| `get_app_structure` | App Dev | Analyze SUSHI App structure (params, modules, etc.) |
+| `get_app_template` | App Dev | Generate new App template from existing apps |
+| `compare_apps` | App Dev | Compare two SUSHI Apps side by side |
 
 ## Directory Structure
 
@@ -52,21 +61,38 @@ Phase 0 establishes basic connectivity between MCP clients and this server via S
 SUSHI_self_maintenance_mcp_server/
 ├── bin/
 │   └── sushi_mcp_server           # Executable entry point
+├── config/
+│   └── safety.yml                 # Safety configuration (blocklist, limits)
 ├── lib/
 │   └── sushi_mcp/
 │       ├── version.rb             # Version constant
 │       ├── server.rb              # Main STDIO loop
 │       ├── protocol.rb            # JSON-RPC message handling
 │       ├── tool_registry.rb       # Tool registration/dispatch
+│       ├── safety.rb              # Safety module (path validation)
+│       ├── skills_parser.rb       # Markdown section parser
+│       ├── app_parser.rb          # Ruby App structure analyzer
 │       └── tools/
 │           ├── base_tool.rb       # Tool base class
-│           └── hello_world.rb     # Test tool (Phase 0)
-├── log/
-│   ├── sushi_mcp_server_phase0_20260106.md   # Phase 0 implementation plan
-│   └── sushi_self_maintenance_plan_20260106.md # Overall design document
+│           ├── hello_world.rb     # Test tool
+│           ├── search_repo.rb     # Code search
+│           ├── read_file.rb       # File reader
+│           ├── list_tree.rb       # Directory tree
+│           ├── find_files.rb      # Glob file finder
+│           ├── list_sushi_apps.rb # App lister
+│           ├── skills_list.rb     # Skills index
+│           ├── skills_get.rb      # Skills section getter
+│           ├── skills_search.rb   # Skills searcher
+│           ├── get_app_structure.rb # App analyzer
+│           ├── get_app_template.rb  # Template generator
+│           └── compare_apps.rb    # App comparator
 ├── skills/
 │   └── sushi.md                   # Comprehensive SUSHI Skills Document
-├── test_requests.jsonl            # Test input for manual verification
+├── sushi/
+│   └── master/                    # SUSHI source code (read-only reference)
+├── log/
+│   ├── sushi_mcp_server_phase0_20260106.md
+│   └── sushi_self_maintenance_plan_20260106.md
 ├── LICENSE
 └── README.md
 ```
@@ -80,8 +106,8 @@ SUSHI_self_maintenance_mcp_server/
 ### Setup
 
 ```bash
-# Clone or navigate to the repository
-cd /srv/sushi/masa_test_sushi_20260106/SUSHI_self_maintenance_mcp_server
+# Navigate to the repository
+cd /srv/sushi/SUSHI_self_maintenance_mcp_server
 
 # Verify the server is executable
 chmod +x bin/sushi_mcp_server
@@ -103,7 +129,7 @@ Add the following to your Cursor MCP configuration file:
   "mcpServers": {
     "sushi-mcp-server": {
       "command": "ruby",
-      "args": ["/srv/sushi/masa_test_sushi_20260106/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server"],
+      "args": ["/srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server"],
       "env": {}
     }
   }
@@ -116,112 +142,111 @@ After saving, restart Cursor. The server should appear in the MCP server list.
 
 Add the following to your Claude Code MCP configuration:
 
-**Location**: `~/.claude/mcp.json` (or equivalent)
+**Location**: `~/.claude.json` (mcpServers section)
 
 ```json
 {
   "mcpServers": {
     "sushi-mcp-server": {
       "command": "ruby",
-      "args": ["/srv/sushi/masa_test_sushi_20260106/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server"],
+      "args": ["/srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server"],
       "env": {}
     }
   }
 }
 ```
 
-### VS Code with MCP Extension
+## Usage Examples
 
-If using VS Code with an MCP extension, add to your workspace or user settings:
-
-```json
-{
-  "mcp.servers": {
-    "sushi-mcp-server": {
-      "command": "ruby",
-      "args": ["/srv/sushi/masa_test_sushi_20260106/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server"]
-    }
-  }
-}
-```
-
-## Manual Testing
-
-### Method 1: Pipe from File (Recommended)
-
-Use the provided test file to send multiple requests:
+### List All Tools
 
 ```bash
-cd /srv/sushi/masa_test_sushi_20260106/SUSHI_self_maintenance_mcp_server
-cat test_requests.jsonl | bin/sushi_mcp_server
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq '.result.tools[].name'
 ```
 
-Expected output:
-```json
-{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"sushi-mcp-server","version":"0.1.0"}}}
-{"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"hello_world","description":"Returns a hello message from SUSHI MCP Server","inputSchema":{"type":"object","properties":{"name":{"type":"string","description":"Name to greet (optional)"}}}}]}}
-{"jsonrpc":"2.0","id":3,"result":{"content":[{"type":"text","text":"Hello, Cursor User! This is SUSHI MCP Server (Phase 0)."}]}}
-```
-
-### Method 2: Interactive Mode
-
-Start the server and type JSON requests manually:
+### Search for Code
 
 ```bash
-cd /srv/sushi/masa_test_sushi_20260106/SUSHI_self_maintenance_mcp_server
-bin/sushi_mcp_server
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_repo","arguments":{"query":"SushiFabric","path":"sushi/master/lib","max_results":10}}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq -r '.result.content[0].text'
 ```
 
-Then paste each JSON request (one per line):
-
-**1. Initialize (required first):**
-```json
-{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}
-```
-
-**2. List available tools:**
-```json
-{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
-```
-
-**3. Call hello_world tool:**
-```json
-{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"hello_world","arguments":{"name":"Developer"}}}
-```
-
-Press `Ctrl+D` (EOF) to exit.
-
-### Method 3: Single Request with Echo
-
-Test individual requests quickly:
+### List SUSHI Apps
 
 ```bash
-# Initialize
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test","version":"1.0"}}}' | bin/sushi_mcp_server
-
-# List tools
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | bin/sushi_mcp_server
-
-# Call hello_world
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hello_world","arguments":{}}}' | bin/sushi_mcp_server
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"list_sushi_apps","arguments":{}}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq -r '.result.content[0].text'
 ```
 
-## MCP Protocol Reference
+### Get Skills Documentation
 
-### Supported Methods (Phase 0)
+```bash
+# List available sections
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"skills_list","arguments":{}}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq -r '.result.content[0].text'
 
-| Method | Description |
-|--------|-------------|
-| `initialize` | Exchange protocol version and capabilities |
-| `initialized` | Notification that initialization is complete (no response) |
-| `tools/list` | List available tools with their schemas |
-| `tools/call` | Execute a tool with given arguments |
+# Get specific section
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"skills_get","arguments":{"section_id":"DEV-010"}}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq -r '.result.content[0].text'
+```
 
-### Available Tools (Phase 0)
+### Analyze SUSHI App Structure
 
-| Tool | Description | Arguments |
-|------|-------------|-----------|
-| `hello_world` | Returns a greeting message | `name` (optional): Name to greet |
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_app_structure","arguments":{"app_name":"FastqcApp"}}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq -r '.result.content[0].text'
+```
+
+### Generate New App Template
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_app_template","arguments":{"base_app":"FastqcApp","new_app_name":"MyQC"}}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq -r '.result.content[0].text'
+```
+
+### Compare Two Apps
+
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"compare_apps","arguments":{"app1":"FastqcApp","app2":"STARApp"}}}' | ruby bin/sushi_mcp_server 2>/dev/null | jq -r '.result.content[0].text'
+```
+
+## Safety Features
+
+The server includes safety measures to prevent unauthorized access:
+
+- **SAFE_ROOT**: All file operations are restricted to the project directory
+- **Blocklist**: Sensitive files (.env, *.key, credentials) are blocked
+- **Output Limits**: Search results and file reads are truncated to prevent token overflow
+
+Configuration in `config/safety.yml`:
+
+```yaml
+safe_root: "/srv/sushi/SUSHI_self_maintenance_mcp_server"
+allowed_paths:
+  - "sushi/master/lib"
+  - "sushi/master/app"
+  - "skills"
+blocklist:
+  - ".env*"
+  - "*.key"
+  - "*.pem"
+  - "credentials*.yml.enc"
+limits:
+  max_read_bytes: 100000
+  max_search_lines: 500
+  max_tree_depth: 5
+```
+
+## Skills Document
+
+The `skills/sushi.md` document contains comprehensive SUSHI documentation organized by section IDs:
+
+| Section ID | Topic |
+|------------|-------|
+| ARCH-010, ARCH-020 | System Architecture, Data Flow |
+| DEV-010 to DEV-060 | App Development (R, Ruby, Rmd, Parameters) |
+| CLI-010 to CLI-030 | Command Line Usage |
+| DEPLOY-010 to DEPLOY-030 | Deployment (Test, Production, Apache) |
+| DB-010, DB-020 | Database Operations |
+| JOBMGR-010, JOBMGR-020 | Job Manager |
+| TROUBLE-010 to TROUBLE-030 | Troubleshooting |
+| REF-010 | Quick Reference |
+
+Use `skills_list` to see all sections and `skills_get` to retrieve specific content.
 
 ## Logging
 
@@ -241,7 +266,7 @@ Log messages do not interfere with protocol communication.
 ### No response from server
 
 1. Ensure JSON is valid (single line, no trailing whitespace)
-2. Check stderr for error messages
+2. Check stderr for error messages: run without `2>/dev/null`
 3. Verify the `method` field matches supported methods
 
 ### Cursor doesn't show the server
@@ -282,6 +307,7 @@ module SushiMcp
       end
 
       def call(arguments)
+        # Use @safety for path validation if needed
         # Implementation
         text_content("Result: #{arguments['param1']}")
       end
@@ -290,15 +316,10 @@ module SushiMcp
 end
 ```
 
-2. Register in `lib/sushi_mcp/tool_registry.rb`:
+2. The tool will be auto-loaded. Add registration in `lib/sushi_mcp/tool_registry.rb` if using a non-standard class name:
 
 ```ruby
-require_relative 'tools/my_tool'
-
-def register_tools
-  register(Tools::HelloWorld.new)
-  register(Tools::MyTool.new)  # Add this line
-end
+register_if_defined('SushiMcp::Tools::MyTool')
 ```
 
 ## Related Documents
@@ -313,5 +334,5 @@ See [LICENSE](LICENSE) file.
 
 ---
 
-**Version**: 0.1.0 (Phase 0)  
-**Last Updated**: 2026-01-06
+**Version**: 0.2.0 (Phase 1-4 Complete)  
+**Last Updated**: 2026-01-15

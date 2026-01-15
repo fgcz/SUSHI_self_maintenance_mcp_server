@@ -1,6 +1,10 @@
 module SushiMcp
   module Tools
     class BaseTool
+      def initialize(safety = nil)
+        @safety = safety
+      end
+
       def name
         raise NotImplementedError
       end
