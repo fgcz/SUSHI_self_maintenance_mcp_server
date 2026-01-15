@@ -31,6 +31,11 @@ module SushiMcp
       register_if_defined('SushiMcp::Tools::GetAppStructure')
       register_if_defined('SushiMcp::Tools::GetAppTemplate')
       register_if_defined('SushiMcp::Tools::CompareApps')
+      register_if_defined('SushiMcp::Tools::SkillsDslList')
+      register_if_defined('SushiMcp::Tools::SkillsDslGet')
+      register_if_defined('SushiMcp::Tools::SkillsDslValidate')
+      register_if_defined('SushiMcp::Tools::SkillsAstInspect')
+      register_if_defined('SushiMcp::Tools::SkillsAstDiff')
     end
 
     def register_if_defined(class_name)
