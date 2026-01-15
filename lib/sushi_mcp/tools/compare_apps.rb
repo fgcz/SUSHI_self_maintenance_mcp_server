@@ -37,7 +37,7 @@ module SushiMcp
           return text_content("Error: Both app1 and app2 are required")
         end
 
-        parser = AppParser.new
+        parser = AppParser.new(@safety&.sushi_lib_path)
         comparison = parser.compare_apps(app1_name, app2_name)
 
         if comparison.nil?

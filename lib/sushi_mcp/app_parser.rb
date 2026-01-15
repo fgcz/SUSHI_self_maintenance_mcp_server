@@ -1,7 +1,5 @@
 module SushiMcp
   class AppParser
-    SUSHI_LIB_PATH = 'sushi/master/lib'
-
     AppStructure = Struct.new(
       :name,
       :class_name,
@@ -20,10 +18,9 @@ module SushiMcp
       keyword_init: true
     )
 
-    def initialize(safe_root = nil)
-      # Default to the project root (parent of lib/sushi_mcp/)
-      @safe_root = safe_root || File.expand_path('../..', __dir__)
-      @lib_path = File.join(@safe_root, SUSHI_LIB_PATH)
+    def initialize(lib_path = nil)
+      # Default to the sushi/master/lib in server root
+      @lib_path = lib_path || File.join(File.expand_path('../..', __dir__), 'sushi/master/lib')
     end
 
     def parse_app(app_name)

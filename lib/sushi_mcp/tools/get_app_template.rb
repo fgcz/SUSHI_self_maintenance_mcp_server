@@ -43,7 +43,7 @@ module SushiMcp
         ezrun_name = "EzApp#{new_app_name}"
 
         if base_app
-          parser = AppParser.new
+          parser = AppParser.new(@safety&.sushi_lib_path)
           structure = parser.parse_app(base_app)
           
           if structure.nil?

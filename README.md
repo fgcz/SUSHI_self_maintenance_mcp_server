@@ -156,6 +156,58 @@ Add the following to your Claude Code MCP configuration:
 }
 ```
 
+## Workspace Configuration
+
+The MCP server automatically detects and uses the workspace directory of the AI agent. This allows it to analyze SUSHI code in any SUSHI repository you're working in.
+
+### Workspace Detection Priority
+
+1. **MCP Client roots** - If the client (Cursor/Claude Code) provides workspace roots during initialization, those are used
+2. **Environment variable** - `SUSHI_WORKSPACE` environment variable
+3. **Default** - Falls back to the MCP server's own directory
+
+### Using with Different SUSHI Repositories
+
+When you open a SUSHI repository in Cursor or Claude Code, the MCP server will automatically search for the lib directory in these locations (in order):
+
+- `master/lib/` - Standard SUSHI repository structure
+- `sushi/master/lib/` - MCP server's bundled copy
+- `lib/` - Alternative structure
+
+### Setting Workspace via Environment Variable
+
+You can explicitly set the workspace in the Cursor MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "sushi-mcp-server": {
+      "command": "ruby",
+      "args": ["/srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server"],
+      "env": {
+        "SUSHI_WORKSPACE": "/path/to/your/sushi/repository"
+      }
+    }
+  }
+}
+```
+
+### Example: Working with Production SUSHI
+
+```json
+{
+  "mcpServers": {
+    "sushi-mcp-server": {
+      "command": "ruby",
+      "args": ["/srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server"],
+      "env": {
+        "SUSHI_WORKSPACE": "/srv/sushi/production"
+      }
+    }
+  }
+}
+```
+
 ## Usage Examples
 
 ### List All Tools

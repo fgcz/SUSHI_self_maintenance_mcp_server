@@ -32,7 +32,7 @@ module SushiMcp
           return text_content("Error: app_name is required")
         end
 
-        parser = AppParser.new
+        parser = AppParser.new(@safety&.sushi_lib_path)
         structure = parser.parse_app(app_name)
 
         if structure.nil?

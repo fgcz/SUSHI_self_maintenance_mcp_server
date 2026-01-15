@@ -3,8 +3,6 @@ require_relative 'base_tool'
 module SushiMcp
   module Tools
     class ListSushiApps < BaseTool
-      SUSHI_LIB_PATH = 'sushi/master/lib'
-
       def name
         'list_sushi_apps'
       end
@@ -29,17 +27,10 @@ module SushiMcp
         filter = arguments['filter']
 
         begin
-          # Get safe root from safety module or fall back to default
-          safe_root = if @safety
-                        @safety.validate_path('.')
-                      else
-                        File.expand_path('../../..', __dir__)
-                      end
-
-          lib_path = File.join(safe_root, SUSHI_LIB_PATH)
+          lib_path = @safety&.sushi_lib_path || File.join(File.expand_path('../../..', __dir__), 'sushi/master/lib')
 
           unless File.directory?(lib_path)
-            return text_content("Error: SUSHI lib directory not found at #{SUSHI_LIB_PATH}")
+            return text_content("Error: SUSHI lib directory not found. Searched paths include: master/lib, sushi/master/lib")
           end
 
           # Find all *App.rb files

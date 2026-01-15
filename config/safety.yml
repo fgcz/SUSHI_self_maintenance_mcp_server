@@ -1,7 +1,19 @@
 safe_root: "/srv/sushi/SUSHI_self_maintenance_mcp_server"
+
+# Path to SUSHI lib directory (relative to workspace root)
+# - For MCP server repo: "sushi/master/lib"
+# - For SUSHI repo directly: "master/lib"
+sushi_lib_paths:
+  - "master/lib"
+  - "sushi/master/lib"
+  - "lib"
+
 allowed_paths:
   - "sushi/master/lib"
   - "sushi/master/app"
+  - "master/lib"
+  - "master/app"
+  - "lib"
   - "skills"
 blocklist:
   - ".env*"

@@ -44,6 +44,10 @@ module SushiMcp
       @tools[tool.name] = tool
     end
 
+    def set_workspace(roots)
+      @safety.set_workspace(roots)
+    end
+
     def list_tools
       @tools.values.map(&:to_schema)
     end

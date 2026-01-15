@@ -7,6 +7,7 @@ module SushiMcp
 
     def initialize
       @tool_registry = ToolRegistry.new
+      @initialized = false
     end
 
     def handle_message(line)
@@ -46,6 +47,13 @@ module SushiMcp
     end
 
     def handle_initialize(params)
+      # Extract workspace roots from client
+      roots = params['roots'] || params['workspaceFolders']
+      
+      # Set workspace in Safety module
+      @tool_registry.set_workspace(roots)
+      @initialized = true
+
       {
         protocolVersion: PROTOCOL_VERSION,
         capabilities: {
