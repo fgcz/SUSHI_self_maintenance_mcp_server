@@ -140,9 +140,17 @@ After saving, restart Cursor. The server should appear in the MCP server list.
 
 ### Claude Code (CLI)
 
-Add the following to your Claude Code MCP configuration:
+Add the MCP server to your Claude Code configuration:
 
-**Location**: `~/.claude.json` (mcpServers section)
+**Method 1: Using `claude mcp add` command (Recommended)**
+
+```bash
+claude mcp add sushi-mcp-server ruby /srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server
+```
+
+**Method 2: Manual configuration**
+
+Edit `~/.claude.json`:
 
 ```json
 {
@@ -155,6 +163,14 @@ Add the following to your Claude Code MCP configuration:
   }
 }
 ```
+
+**Verify installation:**
+
+```bash
+claude mcp list
+```
+
+You should see `sushi-mcp-server` in the list.
 
 ## Workspace Configuration
 
@@ -162,8 +178,9 @@ The MCP server automatically detects and uses the **current working directory** 
 
 ### Default Behavior (Recommended)
 
-By default, the MCP server uses the directory where the AI agent is currently working:
+By default, the MCP server uses the directory where the AI agent is currently working.
 
+**Cursor configuration** (`~/.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -176,9 +193,14 @@ By default, the MCP server uses the directory where the AI agent is currently wo
 }
 ```
 
+**Claude Code**: Use the default installation (no env needed):
+```bash
+claude mcp add sushi-mcp-server ruby /srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server
+```
+
 **How it works:**
-- When you open `/srv/sushi/production` in Cursor → MCP server analyzes code in `/srv/sushi/production/master/lib/`
-- When you open `/home/user/my_sushi_dev` in Cursor → MCP server analyzes code in that directory
+- When you open `/srv/sushi/production` in Cursor/Claude Code → MCP server analyzes code in `/srv/sushi/production/master/lib/`
+- When you `cd /home/user/my_sushi_dev` and run Claude Code → MCP server analyzes code in that directory
 - SUSHI code in the current workspace **can be edited** by the AI agent (this is intended behavior for development)
 
 ### Workspace Detection Priority
@@ -199,7 +221,7 @@ The MCP server searches for the lib directory in these locations (in order):
 
 The SUSHI code bundled within this MCP server (`sushi/master/lib/`) is a **read-only reference copy**:
 
-- Protected by `.cursorignore` to prevent accidental edits
+- Protected by `.cursorignore` (Cursor) and `.claudeignore` (Claude Code) to prevent accidental edits
 - MCP server provides **read-only tools only** (no write operations)
 - For actual SUSHI development, work in a separate SUSHI repository
 
@@ -224,6 +246,8 @@ If you want to always use a specific SUSHI repository regardless of the current 
 ### Example Configurations
 
 **Example 1: Default (use AI agent's current directory)**
+
+Cursor (`~/.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -235,10 +259,18 @@ If you want to always use a specific SUSHI repository regardless of the current 
   }
 }
 ```
-- Open any SUSHI repository in Cursor
+
+Claude Code:
+```bash
+claude mcp add sushi-mcp-server ruby /srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server
+```
+
+- Open any SUSHI repository in Cursor / `cd` to it in Claude Code
 - MCP server automatically uses that repository
 
 **Example 2: Always use production SUSHI**
+
+Cursor (`~/.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -252,8 +284,14 @@ If you want to always use a specific SUSHI repository regardless of the current 
   }
 }
 ```
+
+Claude Code:
+```bash
+claude mcp add sushi-mcp-server -e SUSHI_WORKSPACE=/srv/sushi/production ruby /srv/sushi/SUSHI_self_maintenance_mcp_server/bin/sushi_mcp_server
+```
+
 - Always analyzes production SUSHI code
-- Regardless of which directory is open in Cursor
+- Regardless of which directory is open
 
 ## Usage Examples
 
