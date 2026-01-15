@@ -2,6 +2,7 @@ require_relative 'skills_config'
 require_relative 'version_manager'
 require_relative 'action_log'
 require_relative 'skills_dsl'
+require_relative 'kairos'
 
 module SushiMcp
   class SafeEvolver
@@ -15,6 +16,58 @@ module SushiMcp
     def self.reset_session!
       @@evolution_count = 0
     end
+
+    def self.evolution_count
+      @@evolution_count
+    end
+    
+    # Propose a change to a specific field of a skill
+    # Integrates with evolve DSL rules
+    def self.propose_field(skill_id:, field:, new_value:)
+      # 1. Check if evolution is enabled
+      unless SkillsConfig.evolution_enabled?
+        return { success: false, error: "Evolution is disabled. Set 'evolution_enabled: true' in config." }
+      end
+      
+      # 2. Find the skill
+      skill = Kairos.skill(skill_id)
+      unless skill
+        return { success: false, error: "Skill '#{skill_id}' not found." }
+      end
+      
+      # 3. Check skill's evolution rules
+      rules = skill.evolution_rules
+      if rules
+        if rules.denied.include?(field.to_sym)
+          return { success: false, error: "Field '#{field}' is denied for evolution by skill rules." }
+        end
+        
+        unless rules.allowed.empty? || rules.allowed.include?(field.to_sym)
+          return { success: false, error: "Field '#{field}' is not in the allowed list for evolution." }
+        end
+      end
+      
+      # 4. Check immutable skills from config
+      immutable = SkillsConfig.load['immutable_skills'] || []
+      if immutable.include?(skill_id.to_s)
+        return { success: false, error: "Skill '#{skill_id}' is marked as immutable in config." }
+      end
+      
+      # 5. Check evolution count limit
+      max_evolutions = SkillsConfig.load['max_evolutions_per_session'] || 3
+      if @@evolution_count >= max_evolutions
+        return { success: false, error: "Evolution limit reached (#{max_evolutions}/session). Reset required." }
+      end
+      
+      { 
+        success: true, 
+        skill_id: skill_id,
+        field: field,
+        current_value: skill.send(field),
+        proposed_value: new_value,
+        message: "Proposal validated. Use 'apply_field' with approved=true to apply."
+      }
+    end
     
     def self.propose(skill_id:, new_definition:)
       # 1. Check if evolution is enabled
@@ -22,23 +75,33 @@ module SushiMcp
         return { success: false, error: "Evolution is disabled. Set 'evolution_enabled: true' in config." }
       end
       
-      # 2. Check immutable skills
+      # 2. Check skill's evolution rules (if skill exists)
+      skill = Kairos.skill(skill_id)
+      if skill && skill.evolution_rules
+        rules = skill.evolution_rules
+        # If skill has evolution rules with all fields denied, block
+        if rules.denied.include?(:all) || (rules.denied.include?(:behavior) && rules.denied.include?(:content))
+          return { success: false, error: "Skill '#{skill_id}' has evolution rules that deny modification." }
+        end
+      end
+      
+      # 3. Check immutable skills from config
       immutable = SkillsConfig.load['immutable_skills'] || []
       if immutable.include?(skill_id.to_s)
         return { success: false, error: "Skill '#{skill_id}' is immutable and cannot be modified." }
       end
       
-      # 3. Check evolution count limit
+      # 4. Check evolution count limit
       max_evolutions = SkillsConfig.load['max_evolutions_per_session'] || 3
       if @@evolution_count >= max_evolutions
         return { success: false, error: "Evolution limit reached (#{max_evolutions}/session). Reset required." }
       end
       
-      # 4. Validate syntax in sandbox
+      # 5. Validate syntax in sandbox
       validation = validate_in_sandbox(new_definition)
       return validation unless validation[:success]
       
-      # 5. Generate preview
+      # 6. Generate preview
       { 
         success: true, 
         preview: new_definition,
@@ -63,6 +126,15 @@ module SushiMcp
         return { success: false, error: "Evolution is disabled." }
       end
       
+      # Check skill's evolution rules again
+      skill = Kairos.skill(skill_id)
+      if skill && skill.evolution_rules
+        rules = skill.evolution_rules
+        if rules.denied.include?(:all)
+          return { success: false, error: "Skill '#{skill_id}' denies all evolution." }
+        end
+      end
+      
       validation = validate_in_sandbox(new_definition)
       return validation unless validation[:success]
       
@@ -75,6 +147,9 @@ module SushiMcp
         
         # Increment evolution counter
         @@evolution_count += 1
+        
+        # Reload Kairos to pick up changes
+        Kairos.reload!
         
         # Log the action
         ActionLog.record(
@@ -91,6 +166,7 @@ module SushiMcp
       rescue => e
         # Rollback on error
         VersionManager.rollback(snapshot)
+        Kairos.reload!
         { success: false, error: "Evolution failed and rolled back: #{e.message}" }
       end
     end
@@ -104,6 +180,11 @@ module SushiMcp
       
       unless SkillsConfig.evolution_enabled?
         return { success: false, error: "Evolution is disabled." }
+      end
+      
+      # Check if skill already exists
+      if Kairos.skill(skill_id)
+        return { success: false, error: "Skill '#{skill_id}' already exists. Use 'propose' to modify." }
       end
       
       # Validate the new skill definition
@@ -122,6 +203,9 @@ module SushiMcp
         
         @@evolution_count += 1
         
+        # Reload Kairos to pick up new skill
+        Kairos.reload!
+        
         ActionLog.record(
           action: 'skill_added',
           skill_id: skill_id,
@@ -131,8 +215,43 @@ module SushiMcp
         { success: true, message: "Skill '#{skill_id}' added successfully." }
       rescue => e
         VersionManager.rollback(snapshot)
+        Kairos.reload!
         { success: false, error: "Failed to add skill: #{e.message}" }
       end
+    end
+    
+    # Check if a skill can evolve a specific field
+    def self.can_evolve?(skill_id, field)
+      skill = Kairos.skill(skill_id)
+      return false unless skill
+      
+      # Check config immutable list
+      immutable = SkillsConfig.load['immutable_skills'] || []
+      return false if immutable.include?(skill_id.to_s)
+      
+      # Check skill's evolution rules
+      skill.can_evolve?(field)
+    end
+    
+    # Get evolution status for a skill
+    def self.evolution_status(skill_id)
+      skill = Kairos.skill(skill_id)
+      return { error: "Skill not found" } unless skill
+      
+      rules = skill.evolution_rules
+      immutable_config = SkillsConfig.load['immutable_skills'] || []
+      
+      {
+        skill_id: skill_id,
+        version: skill.version,
+        config_immutable: immutable_config.include?(skill_id.to_s),
+        has_evolution_rules: !rules.nil?,
+        allowed_fields: rules&.allowed || [],
+        denied_fields: rules&.denied || [],
+        evolution_enabled: SkillsConfig.evolution_enabled?,
+        session_evolution_count: @@evolution_count,
+        max_evolutions: SkillsConfig.load['max_evolutions_per_session'] || 3
+      }
     end
     
     private
