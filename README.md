@@ -465,11 +465,168 @@ register_if_defined('SushiMcp::Tools::MyTool')
 - [Overall Design Document](log/sushi_self_maintenance_plan_20260106.md)
 - [SUSHI Skills Document](skills/sushi.md)
 
+---
+
+## Pure Skills Design: skills.rb vs skills.md
+
+### Philosophy
+
+The SUSHI MCP Server implements a **Pure Skills Design** that goes beyond traditional documentation-based skill definitions.
+
+#### The Fundamental Question
+
+> **Where should AI capabilities be defined: in prompts, tools, or structure?**
+
+| Approach | Characteristics |
+|----------|-----------------|
+| **skills.md (Markdown)** | Declarative text; human-readable but not executable |
+| **skills.rb (Ruby DSL)** | Executable structure; self-referential and evolvable |
+
+### Key Differences
+
+| Aspect | skills.md | skills.rb |
+|--------|-----------|-----------|
+| **Nature** | Description (説明) | Definition (定義) |
+| **Executability** | ❌ Cannot be evaluated | ✅ Parseable, validatable |
+| **Side Effects** | Implicit in operator logic | Named & scoped contexts |
+| **Evolution** | External manual updates | Built-in evolution rules |
+| **Self-Reference** | None | Structural via `Kairos` module |
+| **Auditability** | Fragmented | Native (AST-based diff) |
+| **History** | Git commits only | Append-only snapshots |
+| **AI Role** | Reader of documentation | Part of the structure |
+
+### Design Principles (Pure Skills)
+
+1. **P1: Skills Are Pure by Default**
+   - No implicit global state mutation
+   - Only explicitly declared inputs may be read
+   - Only explicitly declared state may be modified
+
+2. **P2: Side Effects Are Named and Scoped**
+   - Any mutation or execution must occur inside a *named context*
+   - Unnamed or implicit side effects are forbidden
+
+3. **P3: Self-Reference Is Structural, Not Magical**
+   - Skills may reference their own definition and history
+   - Skills may NOT arbitrarily rewrite themselves
+   - All self-modification must follow pre-declared evolution rules
+
+4. **P4: Evolution Is Constrained (Minimum-Nomic)**
+   - Rules can evolve
+   - The *rules governing evolution* are strictly limited
+   - Core invariants (e.g., `core_safety`) are immutable
+
+### Example: Pure Skill Definition
+
+```ruby
+skill :pipeline_generation do
+  version "1.0"
+  
+  inputs :genomic_context, :parameters
+  
+  guarantees do
+    reproducible
+    explainable
+  end
+  
+  # Pure behavior: no side effects allowed here
+  behavior do |input|
+    Pipeline.plan(input)
+  end
+  
+  # Named side-effect context
+  effect :execution do
+    requires :human_approval
+    records :audit_trail
+    
+    run do |plan|
+      Executor.run(plan)
+    end
+  end
+  
+  # Evolution rules
+  evolve do
+    allow :parameter_defaults
+    deny :guarantees
+  end
+end
+```
+
+### Self-Referential Introspection
+
+```ruby
+skill :self_inspection do
+  behavior do
+    Kairos.skills.map do |skill|
+      {
+        id: skill.id,
+        version: skill.version,
+        guarantees: skill.guarantees,
+        can_evolve: skill.evolution_rules
+      }
+    end
+  end
+end
+```
+
+### When to Enable Evolution
+
+| Setting | Usage |
+|---------|-------|
+| `evolution_enabled: false` | **Default**: Stable operation, skills are read-only |
+| `evolution_enabled: true` | **Explicit sessions**: Human-supervised improvement cycles |
+
+**Safe evolution workflow**:
+
+```
+1. Set evolution_enabled: true
+2. LLM proposes skill changes (skills_evolve propose)
+3. Human reviews and approves
+4. Apply changes (skills_evolve apply approved:true)
+5. Verify behavior
+6. Set evolution_enabled: false
+```
+
+### Position in Architecture
+
+```
+skills.md ─────────────────────────────────────┐
+  │                                            │
+  │ (Human-readable reference, backward compat) │
+  │                                            │
+  ▼                                            │
+skills.rb (Ruby DSL) ◀────────────────────────┘
+  │
+  ▼
+Ruby AST (parse/validate/diff)
+  │
+  ▼
+MCP Server (context-specific projection)
+  │
+  ▼
+AI Coding Agent (Claude / Cursor / Antigravity)
+```
+
+This design treats skills as:
+
+- **Typed rule contexts** (not free-form text)
+- **Pure-by-default transformations** (functional programming)
+- **Auditable, evolvable subjects** (constitutional systems)
+
+### Pure Skills Documentation
+
+- [Pure Skill Design Concept](log/kairos_pure_skill_design_self_referential_skills_idea_20260115.md)
+- [DSL/AST Design Proposal](log/kairos_skills_dsl_ast_design_proposal_20260115.md)
+- [Self-Evolution Implementation](log/kairos_self_evolution_implementation_plan_20260115.md)
+- [Implementation Log](log/kairos_pure_skill_design_self_referential_skills_implementation_log_20260115.md)
+
+---
+
 ## License
 
 See [LICENSE](LICENSE) file.
 
 ---
 
-**Version**: 0.2.0 (Phase 1-4 Complete)  
+**Version**: 0.3.0 (Pure Skills DSL Complete)  
 **Last Updated**: 2026-01-15

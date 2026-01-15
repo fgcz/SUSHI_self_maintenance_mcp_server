@@ -1,6 +1,45 @@
+# =============================================================================
+# Kairos Pure Skills Configuration
+# =============================================================================
+#
+# This file controls the behavior of the self-referential skill system.
+#
+# RECOMMENDED OPERATION:
+#   - Keep evolution_enabled: false during normal operation
+#   - Only set to true during explicit "evolution sessions"
+#   - Always verify changes before committing
+#
+# When to enable evolution:
+#   1. Scheduled skill improvement sessions
+#   2. Human-supervised experiments
+#   3. When explicitly requested by operator
+#
+# Safe evolution workflow:
+#   1. Set evolution_enabled: true
+#   2. LLM proposes changes (skills_evolve propose)
+#   3. Human reviews diff
+#   4. Apply with approval (skills_evolve apply approved:true)
+#   5. Verify behavior
+#   6. Set evolution_enabled: false
+#
+# =============================================================================
+
+# Master switch for the entire skill system
 enabled: true
+
+# Self-modification switch (DEFAULT: false for safety)
+# Set to true ONLY during supervised evolution sessions
 evolution_enabled: false
+
+# Maximum number of evolutions allowed per session
+# Prevents runaway modifications
 max_evolutions_per_session: 3
+
+# Require explicit human approval before applying changes
+# When true, skills_evolve apply must include approved:true
 require_human_approval: true
+
+# Skills that can NEVER be modified, regardless of other settings
+# These represent core safety invariants (Minimum-Nomic principle)
 immutable_skills:
   - core_safety
