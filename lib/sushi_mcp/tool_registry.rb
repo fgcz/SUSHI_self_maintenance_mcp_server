@@ -36,6 +36,10 @@ module SushiMcp
       register_if_defined('SushiMcp::Tools::SkillsDslValidate')
       register_if_defined('SushiMcp::Tools::SkillsAstInspect')
       register_if_defined('SushiMcp::Tools::SkillsAstDiff')
+      register_if_defined('SushiMcp::Tools::SkillsActionLog')
+      register_if_defined('SushiMcp::Tools::SkillsEvolve')
+      register_if_defined('SushiMcp::Tools::SkillsConfigTool')
+      register_if_defined('SushiMcp::Tools::SkillsRollback')
     end
 
     def register_if_defined(class_name)

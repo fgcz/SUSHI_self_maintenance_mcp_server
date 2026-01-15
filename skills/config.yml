@@ -1,0 +1,6 @@
+enabled: true
+evolution_enabled: false
+max_evolutions_per_session: 3
+require_human_approval: true
+immutable_skills:
+  - core_safety
