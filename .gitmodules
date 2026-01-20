@@ -1,0 +1,3 @@
+[submodule "server/KairosChain_mcp_server/sushi"]
+	path = server/KairosChain_mcp_server/sushi
+	url = https://github.com/uzh/sushi
