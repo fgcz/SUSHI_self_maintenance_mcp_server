@@ -104,10 +104,10 @@ To fetch the latest changes from the KairosChain repository (Main Branch) into y
 
 ```bash
 # Register remote (one-time setup)
-git remote add kairos_upstream https://github.com/masaomi/KairosChain_2026
+git remote add mcp_server https://github.com/masaomi/KairosChain_2026
 
 # Pull updates into server/ directory
-git subtree pull --prefix=server kairos_upstream main --squash
+git subtree pull --prefix=server mcp_server main --squash
 ```
 
 ### Pushing Changes Upstream
@@ -115,7 +115,7 @@ git subtree pull --prefix=server kairos_upstream main --squash
 If you make improvements to the core server code inside `server/` that should be shared back to KairosChain:
 
 ```bash
-git subtree push --prefix=server kairos_upstream main
+git subtree pull --prefix=server mcp_server main --squash
 ```
 
 ### SUSHI-Specific Knowledge & Skills
